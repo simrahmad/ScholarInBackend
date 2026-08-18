@@ -1,0 +1,25 @@
+# Lives on the VM at ~/scholario-backend/docker-compose.yml
+# GitHub Actions runs `docker compose pull && docker compose up -d` against
+# this file on every deploy — it never rebuilds the image on the VM, only
+# pulls the one already built and pushed by the CI job.
+#
+# Before first run, replace GITHUB_USERNAME/REPO_NAME below with your real
+# GitHub username and repo name (lowercase), matching what the workflow pushes to.
+
+services:
+  scholario-backend:
+    image: ghcr.io/GITHUB_USERNAME/REPO_NAME:latest
+    container_name: scholario-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Read-only mount of the Firebase service account key. This file
+      # itself lives directly on the VM (outside git, outside the image)
+      # and is never baked into the Docker image.
+      - /etc/scholario-backend/firebase-service-account.json:/app/firebase-service-account.json:ro
+    ports:
+      # Bound to localhost only — Nginx (running directly on the VM,
+      # outside Docker) reverse-proxies to this port. The container is
+      # never exposed directly to the internet.
+      - "127.0.0.1:3000:3000"
