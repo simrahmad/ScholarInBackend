@@ -116,6 +116,27 @@ async function markStripeEventProcessed(eventId) {
   return rows.length > 0;
 }
 
+async function listDisputedBookings() {
+  const { rows } = await getPool().query(
+    `SELECT * FROM gig_bookings WHERE status = 'disputed' ORDER BY dispute_filed_at ASC`
+  );
+  return rows;
+}
+
+async function resolveDispute(bookingId, newStatus, adminResolutionText) {
+  const { rows } = await getPool().query(
+    `UPDATE gig_bookings
+     SET status = $2,
+         admin_resolution = $3,
+         admin_resolved_at = now(),
+         updated_at = now()
+     WHERE id = $1
+     RETURNING *`,
+    [bookingId, newStatus, adminResolutionText]
+  );
+  return rows[0];
+}
+
 module.exports = {
   getGigById,
   createBooking,
@@ -126,4 +147,6 @@ module.exports = {
   getBookingByPaymentIntentId,
   markPaid,
   markStripeEventProcessed,
+  listDisputedBookings,
+  resolveDispute,
 };

@@ -9,6 +9,7 @@ const meRoutes = require("./routes/me");
 const bookingRoutes = require("./routes/bookings");
 const paymentRoutes = require("./routes/payments");
 const stripeWebhookRoutes = require("./routes/stripeWebhook");
+const adminRoutes = require("./routes/admin");
 const { errorHandler } = require("./middleware/errorHandler");
 
 function createApp() {
@@ -50,6 +51,7 @@ function createApp() {
   app.use(meRoutes);
   app.use(bookingRoutes);
   app.use(paymentRoutes);
+  app.use(adminRoutes);
 
   // 404 for anything unmatched
   app.use((req, res) => {
