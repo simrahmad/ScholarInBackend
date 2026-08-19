@@ -7,6 +7,8 @@ const rateLimit = require("express-rate-limit");
 const healthRoutes = require("./routes/health");
 const meRoutes = require("./routes/me");
 const bookingRoutes = require("./routes/bookings");
+const paymentRoutes = require("./routes/payments");
+const stripeWebhookRoutes = require("./routes/stripeWebhook");
 const { errorHandler } = require("./middleware/errorHandler");
 
 function createApp() {
@@ -18,6 +20,11 @@ function createApp() {
 
   app.use(helmet());
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+  // Must be mounted BEFORE express.json() — Stripe signature verification
+  // needs the raw, unparsed request body.
+  app.use(stripeWebhookRoutes);
+
   app.use(express.json());
 
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
@@ -42,6 +49,7 @@ function createApp() {
   app.use(healthRoutes);
   app.use(meRoutes);
   app.use(bookingRoutes);
+  app.use(paymentRoutes);
 
   // 404 for anything unmatched
   app.use((req, res) => {

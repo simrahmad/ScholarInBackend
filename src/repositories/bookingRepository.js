@@ -75,10 +75,55 @@ async function updateBookingStatus(bookingId, newStatus, extra = {}) {
   return rows[0];
 }
 
+async function attachPaymentIntent(bookingId, paymentIntentId) {
+  const { rows } = await getPool().query(
+    `UPDATE gig_bookings
+     SET stripe_payment_intent_id = $2
+     WHERE id = $1
+     RETURNING *`,
+    [bookingId, paymentIntentId]
+  );
+  return rows[0];
+}
+
+async function getBookingByPaymentIntentId(paymentIntentId) {
+  const { rows } = await getPool().query(
+    `SELECT * FROM gig_bookings WHERE stripe_payment_intent_id = $1`,
+    [paymentIntentId]
+  );
+  return rows[0] || null;
+}
+
+async function markPaid(bookingId) {
+  const { rows } = await getPool().query(
+    `UPDATE gig_bookings
+     SET status = 'paid', paid_at = now(), updated_at = now()
+     WHERE id = $1
+     RETURNING *`,
+    [bookingId]
+  );
+  return rows[0];
+}
+
+async function markStripeEventProcessed(eventId) {
+  const { rows } = await getPool().query(
+    `INSERT INTO processed_stripe_events (event_id)
+     VALUES ($1)
+     ON CONFLICT (event_id) DO NOTHING
+     RETURNING event_id`,
+    [eventId]
+  );
+  return rows.length > 0;
+}
+
 module.exports = {
   getGigById,
   createBooking,
   getBookingById,
   listBookingsForUser,
   updateBookingStatus,
+  attachPaymentIntent,
+  getBookingByPaymentIntentId,
+  markPaid,
+  markStripeEventProcessed,
 };
