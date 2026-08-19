@@ -6,6 +6,7 @@ const rateLimit = require("express-rate-limit");
 
 const healthRoutes = require("./routes/health");
 const meRoutes = require("./routes/me");
+const bookingRoutes = require("./routes/bookings");
 const { errorHandler } = require("./middleware/errorHandler");
 
 function createApp() {
@@ -40,6 +41,7 @@ function createApp() {
 
   app.use(healthRoutes);
   app.use(meRoutes);
+  app.use(bookingRoutes);
 
   // 404 for anything unmatched
   app.use((req, res) => {

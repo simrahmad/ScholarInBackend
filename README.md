@@ -229,4 +229,3 @@ token verification.
 - No Stripe integration yet (Phase 3)
 - No admin panel (Phase 4)
 - Supabase RLS policies to lock out direct client writes (Phase 6)
-"# ScholarInBackend" 
