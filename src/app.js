@@ -11,6 +11,7 @@ const paymentRoutes = require("./routes/payments");
 const stripeWebhookRoutes = require("./routes/stripeWebhook");
 const adminRoutes = require("./routes/admin");
 const { errorHandler } = require("./middleware/errorHandler");
+const connectRoutes = require("./routes/connect"); 
 
 function createApp() {
   const app = express();
@@ -51,7 +52,9 @@ function createApp() {
   app.use(meRoutes);
   app.use(bookingRoutes);
   app.use(paymentRoutes);
+  app.use(connectRoutes);
   app.use(adminRoutes);
+  
 
   // 404 for anything unmatched
   app.use((req, res) => {
