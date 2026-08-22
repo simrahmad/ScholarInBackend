@@ -2,6 +2,8 @@ const express = require("express");
 const { getStripeClient } = require("../config/stripe");
 const { asyncHandler } = require("../middleware/errorHandler");
 const bookingRepo = require("../repositories/bookingRepository");
+const userRepo = require("../repositories/userRepository");
+const { sendPaymentReceivedEmail } = require("../services/email");
 const { STATUSES, isTransitionAllowed } = require("../domain/bookingStateMachine");
 
 const router = express.Router();
@@ -35,6 +37,8 @@ router.post(
       await handlePaymentSucceeded(event.data.object);
     } else if (event.type === "payment_intent.payment_failed") {
       console.warn(`PaymentIntent ${event.data.object.id} failed — booking stays unpaid.`);
+    } else if (event.type === "account.updated") {
+      await handleAccountUpdated(event.data.object);
     }
 
     res.status(200).json({ received: true });
@@ -68,6 +72,18 @@ async function handlePaymentSucceeded(paymentIntent) {
 
   await bookingRepo.markPaid(booking.id);
   console.log(`Booking ${booking.id} marked paid via PaymentIntent ${paymentIntent.id}.`);
+
+  const consultant = await userRepo.getUserBasicInfo(booking.consultant_id);
+  await sendPaymentReceivedEmail({
+    to: consultant?.email,
+    consultantName: consultant?.name,
+    amount: booking.price,
+    bookingId: booking.id,
+  });
+}
+
+async function handleAccountUpdated(account) {
+  await userRepo.setChargesEnabledByAccountId(account.id, account.charges_enabled);
 }
 
 module.exports = router;
