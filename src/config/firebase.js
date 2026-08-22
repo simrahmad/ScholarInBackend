@@ -1,15 +1,20 @@
-const admin = require("firebase-admin");
+const { initializeApp, cert, getApps } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
 const fs = require("fs");
 
-let initialized = false;
+let authInstance = null;
 
 /**
- * Initializes the Firebase Admin SDK exactly once.
+ * Initializes the Firebase Admin SDK exactly once, using the MODULAR
+ * API (firebase-admin/app, firebase-admin/auth) rather than the legacy
+ * `require("firebase-admin")` namespace — in firebase-admin@14.x, the
+ * legacy namespace's `admin.credential` is undefined, which is exactly
+ * what caused "Cannot read properties of undefined (reading 'cert')".
  * This is what lets the backend independently verify a Firebase ID token
  * sent by the Android app, instead of trusting a uid the client claims to be.
  */
 function initFirebaseAdmin() {
-  if (initialized) return admin;
+  if (authInstance) return authInstance;
 
   const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
   if (!serviceAccountPath) {
@@ -27,12 +32,12 @@ function initFirebaseAdmin() {
     fs.readFileSync(serviceAccountPath, "utf8")
   );
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+  const app = getApps().length
+    ? getApps()[0]
+    : initializeApp({ credential: cert(serviceAccount) });
 
-  initialized = true;
-  return admin;
+  authInstance = getAuth(app);
+  return authInstance;
 }
 
 module.exports = { initFirebaseAdmin };

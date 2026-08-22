@@ -18,9 +18,9 @@ async function requireAuth(req, res, next) {
     return res.status(401).json({ error: "Missing or malformed Authorization header." });
   }
 
-  try {
-    const admin = initFirebaseAdmin();
-    const decoded = await admin.auth().verifyIdToken(token);
+    try {
+    const auth = initFirebaseAdmin();
+    const decoded = await auth.verifyIdToken(token);
     req.userId = decoded.uid;
     req.userEmail = decoded.email || null;
     next();
