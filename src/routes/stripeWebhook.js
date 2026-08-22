@@ -73,17 +73,16 @@ async function handlePaymentSucceeded(paymentIntent) {
   await bookingRepo.markPaid(booking.id);
   console.log(`Booking ${booking.id} marked paid via PaymentIntent ${paymentIntent.id}.`);
 
-  const consultant = await userRepo.getUserBasicInfo(booking.consultant_id);
   const platformFeePercent = Number(booking.platform_fee_percent ?? 20);
   const consultantAmount = Number(booking.price) * (1 - platformFeePercent / 100);
 
-const consultant = await userRepo.getUserBasicInfo(booking.consultant_id);
-await sendPaymentReceivedEmail({
-  to: consultant?.email,
-  consultantName: consultant?.name,
-  amount: consultantAmount,   // ← now correctly $80, not $100
-  bookingId: booking.id,
-});
+  const consultant = await userRepo.getUserBasicInfo(booking.consultant_id);
+  await sendPaymentReceivedEmail({
+    to: consultant?.email,
+    consultantName: consultant?.name,
+    amount: consultantAmount,
+    bookingId: booking.id,
+  });
 }
 
 async function handleAccountUpdated(account) {
